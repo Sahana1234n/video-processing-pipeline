@@ -40,7 +40,7 @@ if "video_metadata" not in tables:
         video_id String,
         video_name String,
         frame_count UInt32,
-        processed_at DateTime DEFAULT now()
+        processed_at DateTime DEFAULT now()        
     )
     ENGINE = MergeTree()
     ORDER BY video_id

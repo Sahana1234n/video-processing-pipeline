@@ -10,6 +10,7 @@ dependencies = [
     "mypy>=1.19.1",
     "numpy>=2.4.0",
     "opencv-python>=4.11.0.86",
+    "pandas>=2.3.3",
     "python-dotenv>=1.2.1",
     "ruff>=0.14.10",
     "temporalio>=1.21.1",
