@@ -4,18 +4,16 @@ import clickhouse_connect
 from dotenv import load_dotenv
 from typing import Dict
 
-# Load environment variables from .env
+# Load environment variables
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 
-# ClickHouse credentials from environment
+# ClickHouse credentials
 CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST")
 CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", "8443"))
 CLICKHOUSE_USERNAME = os.getenv("CLICKHOUSE_USERNAME")
 CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD")
-if CLICKHOUSE_PASSWORD is None:
-    raise RuntimeError("CLICKHOUSE_PASSWORD not set")
 
 if not all([CLICKHOUSE_HOST, CLICKHOUSE_USERNAME, CLICKHOUSE_PASSWORD]):
     raise RuntimeError("ClickHouse credentials not found in environment")
@@ -28,11 +26,10 @@ client = clickhouse_connect.get_client(
     password=CLICKHOUSE_PASSWORD,
     secure=True
 )
-
 logging.info("Connected to ClickHouse Cloud")
 
-# Check if the table "video_metadata" exists, create if it doesn't
-tables =  [row[0] for row in client.query("SHOW TABLES").result_rows]
+# Ensure table exists
+tables = [row[0] for row in client.query("SHOW TABLES").result_rows]
 if "video_metadata" not in tables:
     logging.info("Table 'video_metadata' not found. Creating table...")
     client.command("""
@@ -40,29 +37,36 @@ if "video_metadata" not in tables:
         video_id String,
         video_name String,
         frame_count UInt32,
-        processed_at DateTime DEFAULT now()        
+        processed_at DateTime DEFAULT now()
     )
     ENGINE = MergeTree()
-    ORDER BY video_id
+    ORDER BY (video_id, frame_count)
     """)
     logging.info("Table 'video_metadata' created successfully.")
 
-# Function to insert metadata
+
 def insert_metadata(metadata: Dict) -> None:
     """
-    Insert metadata into ClickHouse table "video_metadata".
+    Insert metadata into ClickHouse table 'video_metadata'.
     """
     table_name = "video_metadata"
 
-    #only allowed columns that exists in table
-    allowed_columns = {"video_id", "video_name", "frame_count", "processed_at"}
-
-    #Always include all columns and use defaults if missing
-    clean_metadata = {col: metadata.get(col, None) for col in allowed_columns}
-
-    # Check required fields
-    if clean_metadata["video_id"] is None:
+    # Ensure required fields
+    video_id = metadata.get("video_id")
+    if not video_id:
         raise ValueError("video_id is required in metadata")
-    
-    client.insert(table_name, [clean_metadata]) #type: ignore
-    logging.info(f"Inserted metadata for video_id: {metadata.get('video_id')}")
+
+    video_name = str(metadata.get("video_name", ""))
+    frame_count = int(metadata.get("frame_count", 0))
+
+    # Insert as tuple with column names to avoid KeyError
+    try:
+        client.insert(
+            table_name,
+            [(video_id, video_name, frame_count)],
+            column_names=["video_id", "video_name", "frame_count"]
+        )
+        logging.info(f"Inserted metadata for video_id={video_id}, frame_count={frame_count}")
+    except Exception as e:
+        logging.error(f"Failed to insert metadata for video_id={video_id}, frame_count={frame_count}: {e}")
+        raise
