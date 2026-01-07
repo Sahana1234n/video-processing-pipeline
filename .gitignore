@@ -14,6 +14,9 @@ wheels/
 lancedb/**/_versions/
 lancedb/**/_transactions/
 lancedb/**/data/
+# LanceDB (generated data)
+lancedb/
+*.lance
 
 # Local files
 sample.mp4
