@@ -20,7 +20,7 @@ def _extract_frames_sync(
     Extract frames from a video file and save them as images
     """
 
-    # Failure injection at execution time 
+    # Failure injection
     maybe_fail()
 
     cap = cv2.VideoCapture(video_path)

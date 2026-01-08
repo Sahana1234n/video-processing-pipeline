@@ -59,7 +59,6 @@ def insert_metadata(metadata: Dict) -> None:
     video_name = str(metadata.get("video_name", ""))
     frame_count = int(metadata.get("frame_count", 0))
 
-    # Insert as tuple with column names to avoid KeyError
     try:
         client.insert(
             table_name,

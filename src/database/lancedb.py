@@ -28,9 +28,7 @@ _db = lancedb.connect(DB_PATH)  # type: ignore[attr-defined]
 _table = _db.create_table(TABLE_NAME, schema=schema)
 print(f"Created table '{TABLE_NAME}' with correct schema.")
 
-# -----------------------------
 # Core functions
-# -----------------------------
 def insert_embedding(video_id: str, frame_path: str, embedding: List[float]) -> None:
     """
     Insert a 512-dimensional embedding into LanceDB
@@ -49,8 +47,6 @@ def check_embedding_exists(video_id: str, frame_path: str) -> bool:
     Check if an embedding already exists in the table
     """
     df = _table.to_pandas()
-    # Debug: see columns
-    # print("Columns:", df.columns)
     filtered = df[(df["video_id"] == video_id) & (df["frame_path"] == frame_path)]
     return not filtered.empty
 

@@ -4,9 +4,9 @@ from temporalio import activity
 import logging
 from src.utils.failures import maybe_fail
 from src.database.lancedb import insert_embedding, check_embedding_exists
-import asyncio  # <- use asyncio.sleep instead of time.sleep
+import asyncio 
 
-BATCH_SIZE = 50  # adjust if needed
+BATCH_SIZE = 50 
 
 @activity.defn
 async def process_frames(video_id: str, frames: List[str]) -> List[str]:
@@ -24,7 +24,7 @@ async def process_frames(video_id: str, frames: List[str]) -> List[str]:
 
         for idx, frame_path in enumerate(batch_frames, start=batch_start + 1):
             try:
-                # Heartbeat per frame (not per chunk)
+                # Heartbeat per frame
                 activity.heartbeat(f"Starting frame {idx}/{total}")
 
                 # Idempotency check
@@ -35,20 +35,18 @@ async def process_frames(video_id: str, frames: List[str]) -> List[str]:
 
                 logging.info(f"Processing frame {idx}/{total}: {frame_path}")
 
-                # Failure injection demo
+                # Failure injection 
                 maybe_fail()
 
                 # Generate embedding in chunks
                 embedding = []
-                for i in range(8):  # 8 chunks of 64 -> 512-dim
+                for i in range(8):  
                     chunk = np.random.rand(64).tolist()
                     embedding.extend(chunk)
 
                     # Heartbeat every 2 chunks
                     if i % 2 == 0:
                         activity.heartbeat(f"Processing frame {idx}/{total}, embedding {i*64+1}/512")
-
-                    # async sleep instead of time.sleep
                     await asyncio.sleep(0.005)
 
                 maybe_fail()
