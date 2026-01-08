@@ -15,8 +15,8 @@ CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", "8443"))
 CLICKHOUSE_USERNAME = os.getenv("CLICKHOUSE_USERNAME")
 CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD")
 
-if not all([CLICKHOUSE_HOST, CLICKHOUSE_USERNAME, CLICKHOUSE_PASSWORD]):
-    raise RuntimeError("ClickHouse credentials not found in environment")
+if CLICKHOUSE_PASSWORD is None:
+    raise ValueError("CLICKHOUSE_PASSWORD is not set")
 
 # Create ClickHouse client
 client = clickhouse_connect.get_client(
